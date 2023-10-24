@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css">
+    <title>Montagem de Treinos de Musculação</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Montagem de Treinos de Musculação</h1>
+        <div id="treino-form">
+            <!-- Botões para adicionar e exportar treinos -->
+            <button type="button" onclick="adicionarTreino()">Adicionar Treino</button>
+            <button type="button" onclick="exportarTodos()">Exportar Todos</button>
+            <button type="button" onclick="importarTodos()">Importar Todos</button>
+        </div>
+    </div>
+
+    <script>
+        let treinoCount = 1;
+
+        function adicionarTreino() {
+            treinoCount++;
+
+            const treinoForm = document.getElementById("treino-form");
+            const newTreinoList = document.createElement("div");
+            newTreinoList.id = `treinos-list-${treinoCount}`;
+
+            newTreinoList.innerHTML = `
+                <h3>Treino ${treinoCount}</h3>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Dia da Semana</th>
+                            <th>Exercício</th>
+                            <th>Repetições</th>
+                            <th>Carga</th>
+                            <th>Observação</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="date" name="data"></td>
+                            <td>
+                                <select name="diaSemana">
+                                    <option value="Segunda-feira">Segunda-feira</option>
+                                    <option value="Terça-feira">Terça-feira</option>
+                                    <option value="Quarta-feira">Quarta-feira</option>
+                                    <option value="Quinta-feira">Quinta-feira</option>
+                                    <option value="Sexta-feira">Sexta-feira</option>
+                                    <option value="Sábado">Sábado</option>
+                                    <option value="Domingo">Domingo</option>
+                                </select>
+                            </td>
+                            <td><input type="text" name="exercicio"></td>
+                            <td><input type="text" name="repeticoes"></td>
+                            <td><input type="text" name="carga"></td>
+                            <td><input type="text" name="observacao"></td>
+                            <td><button type="button" onclick="removerLinha(this)">Remover</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" onclick="exportarJSON(${treinoCount})">Exportar</button>
+                <button type="button" onclick="importarJSON(${treinoCount})">Importar</button>
+            `;
+            treinoForm.appendChild(newTreinoList);
+        }
+
+        function adicionarTreinosIniciais() {
+            for (let i = 2; i <= 6; i++) {
+                adicionarTreino();
+            }
+        }
+
+        function removerLinha(button) {
+            const treinoList = button.parentElement.parentElement.parentElement;
+            treinoList.remove();
+        }
+
+        function exportarJSON(treinoIndex) {
+            const treinoList = document.getElementById(`treinos-list-${treinoIndex}`);
+            const dataCells = treinoList.querySelectorAll('input[name="data"]');
+            const diaSemanaCells = treinoList.querySelectorAll('select[name="diaSemana"]');
+            const exercicioCells = treinoList.querySelectorAll('input[name="exercicio"]');
+            const repeticoesCells = treinoList.querySelectorAll('input[name="repeticoes"]');
+            const cargaCells = treinoList.querySelectorAll('input[name="carga"]');
+            const observacaoCells = treinoList.querySelectorAll('input[name="observacao"]');
+            const treinoData = [];
+
+            for (let i = 0; i < exercicioCells.length; i++) {
+                treinoData.push({
+                    data: dataCells[i].value,
+                    diaSemana: diaSemanaCells[i].value,
+                    exercicio: exercicioCells[i].value,
+                    repeticoes: repeticoesCells[i].value,
+                    carga: cargaCells[i].value,
+                    observacao: observacaoCells[i].value,
+                });
+            }
+
+            const treinoJSON = JSON.stringify(treinoData);
+            console.log(treinoJSON);
+        }
+
+        function importarJSON(treinoIndex) {
+            const treinoList = document.getElementById(`treinos-list-${treinoIndex}`);
+            const jsonInput = prompt("Cole aqui o JSON do treino:");
+
+            if (jsonInput) {
+                try {
+                    const treinoData = JSON.parse(jsonInput);
+                    const primeiraLinha = treinoList.querySelector("tbody tr");
+                    const tableBody = treinoList.querySelector("tbody");
+                    tableBody.innerHTML = "";
+
+                    for (const exercicio of treinoData) {
+                        const newRow = primeiraLinha.cloneNode(true);
+                        newRow.querySelector('input[name="data"]').value = exercicio.data;
+                        newRow.querySelector('select[name="diaSemana"]').value = exercicio.diaSemana;
+                        newRow.querySelector('input[name="exercicio"]').value = exercicio.exercicio;
+                        newRow.querySelector('input[name="repeticoes"]').value = exercicio.repeticoes;
+                        newRow.querySelector('input[name="carga"]').value = exercicio.carga;
+                        newRow.querySelector('input[name="observacao"]').value = exercicio.observacao;
+                        tableBody.appendChild(newRow);
+                    }
+                } catch (error) {
+                    alert("Erro ao importar o JSON.");
+                }
+            }
+        }
+
+        function exportarTodos() {
+            const allTreinos = [];
+
+            for (let i = 1; i <= treinoCount; i++) {
+                const treinoList = document.getElementById(`treinos-list-${i}`);
+                const dataCells = treinoList.querySelectorAll('input[name="data"]');
+                if (!dataCells[0].value) {
+                    continue;
+                }
+
+                const diaSemanaCells = treinoList.querySelectorAll('select[name="diaSemana"]');
+                const exercicioCells = treinoList.querySelectorAll('input[name="exercicio"]');
+                const repeticoesCells = treinoList.querySelectorAll('input[name="repeticoes"]');
+                const cargaCells = treinoList.querySelectorAll('input[name="carga"]');
+                const observacaoCells = treinoList.querySelectorAll('input[name="observacao"]');
+                const treinoData = [];
+
+                for (let j = 0; j < exercicioCells.length; j++) {
+                    treinoData.push({
+                        data: dataCells[j].value,
+                        diaSemana: diaSemanaCells[j].value,
+                        exercicio: exercicioCells[j].value,
+                        repeticoes: repeticoesCells[j].value,
+                        carga: cargaCells[j].value,
+                        observacao: observacaoCells[j].value,
+                    });
+                }
+
+                const treino = {
+                    data: dataCells[0].value,
+                    diaSemana: diaSemanaCells[0].value,
+                    exercicios: treinoData,
+                };
+
+                allTreinos.push(treino);
+            }
+
+            const allTreinosJSON = JSON.stringify(allTreinos);
+
+            const blob = new Blob([allTreinosJSON], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'treinos.json';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function importarTodos() {
+            const jsonInput = prompt("Cole aqui o JSON de todos os treinos:");
+
+            if (jsonInput) {
+                try {
+                    const allTreinos = JSON.parse(jsonInput);
+                    let i = 1;
+
+                    for (const treino of allTreinos) {
+                        adicionarTreino();
+                        const treinoList = document.getElementById(`treinos-list-${i}`);
+                        treinoList.querySelector('input[name="data"]').value = treino.data;
+                        treinoList.querySelector('select[name="diaSemana"]').value = treino.diaSemana;
+
+                        for (let j = 0; j < treino.exercicios.length; j++) {
+                            const newRow = treinoList.querySelector("tbody tr").cloneNode(true);
+                            newRow.querySelector('input[name="data"]').value = treino.exercicios[j].data;
+                            newRow.querySelector('select[name="diaSemana"]').value = treino.exercicios[j].diaSemana;
+                            newRow.querySelector('input[name="exercicio"]').value = treino.exercicios[j].exercicio;
+                            newRow.querySelector('input[name="repeticoes"]').value = treino.exercicios[j].repeticoes;
+                            newRow.querySelector('input[name="carga"]').value = treino.exercicios[j].carga;
+                            newRow.querySelector('input[name="observacao"]').value = treino.exercicios[j].observacao;
+                            treinoList.querySelector("tbody").appendChild(newRow);
+                        }
+
+                        i++;
+                    }
+                } catch (error) {
+                    alert("Erro ao importar o JSON.");
+                }
+            }
+        }
+
+        adicionarTreinosIniciais();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
